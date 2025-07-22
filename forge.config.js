@@ -4,6 +4,11 @@ const { FuseV1Options, FuseVersion } = require('@electron/fuses');
 module.exports = {
   packagerConfig: {
     asar: true,
+    extendInfo: {
+      NSBluetoothAlwaysUsageDescription: "This app needs Bluetooth to discover and connect with nearby devices for controlling peripherals and data synchronization.",
+      NSBluetoothPeripheralUsageDescription: "This app needs Bluetooth to connect with peripheral devices for data exchange.",
+      NSBluetoothUsageDescription: "This app uses Bluetooth to discover and connect with nearby devices."
+    },
   },
   rebuildConfig: {},
   makers: [
