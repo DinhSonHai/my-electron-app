@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, nativeTheme } = require('electron/main')
+const { app, BrowserWindow, ipcMain, nativeTheme, Menu, MenuItem, globalShortcut } = require('electron/main')
 const path = require('node:path')
 
 const createWindow = () => {
@@ -40,7 +40,75 @@ const createWindow = () => {
   })
 
   win.loadFile('index.html')
+
+  win.webContents.on('before-input-event', (event, input) => {
+    if (input.control && input.key.toLowerCase() === 'i') {
+      console.log('Pressed Control+I')
+      event.preventDefault()
+    }
+  })
+
+  // Enable context menu for developer tools
+  win.webContents.on('context-menu', (e, params) => {
+    const contextMenu = new Menu()
+    
+    // Add inspect element option
+    contextMenu.append(new MenuItem({
+      label: 'Inspect Element',
+      click: () => {
+        win.webContents.inspectElement(params.x, params.y)
+      }
+    }))
+    
+    contextMenu.popup()
+  })
 }
+
+const menu = new Menu()
+menu.append(new MenuItem({
+  label: 'Electron',
+  submenu: [{
+    role: 'help',
+    accelerator: process.platform === 'darwin' ? 'Alt+Cmd+L' : 'Alt+Shift+L',
+    click: () => { console.log('Electron rocks!') }
+  }]
+}))
+
+// Add developer tools menu
+menu.append(new MenuItem({
+  label: 'Developer',
+  submenu: [
+    {
+      label: 'Toggle Developer Tools',
+      accelerator: process.platform === 'darwin' ? 'Cmd+Option+I' : 'Ctrl+Shift+I',
+      click: (item, focusedWindow) => {
+        if (focusedWindow) {
+          focusedWindow.webContents.toggleDevTools()
+        }
+      }
+    },
+    {
+      label: 'Reload',
+      accelerator: process.platform === 'darwin' ? 'Cmd+R' : 'Ctrl+R',
+      click: (item, focusedWindow) => {
+        if (focusedWindow) {
+          focusedWindow.reload()
+        }
+      }
+    },
+    {
+      label: 'Force Reload',
+      accelerator: process.platform === 'darwin' ? 'Cmd+Shift+R' : 'Ctrl+Shift+R',
+      click: (item, focusedWindow) => {
+        if (focusedWindow) {
+          focusedWindow.webContents.reloadIgnoringCache()
+        }
+      }
+    }
+  ]
+}))
+
+Menu.setApplicationMenu(menu)
 
 ipcMain.handle('dark-mode:toggle', () => {
   if (nativeTheme.shouldUseDarkColors) {
@@ -56,6 +124,9 @@ ipcMain.handle('dark-mode:system', () => {
 })
 
 app.whenReady().then(() => {
+  globalShortcut.register('Alt+CommandOrControl+G', () => {
+    console.log('Electron loves global shortcuts!')
+  })
   ipcMain.handle('ping', () => 'pong')
   createWindow()
 
